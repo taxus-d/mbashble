@@ -60,6 +60,13 @@ dict_put() {
     return $?
 }
 
+# dict_keys <dict string>
+dict_keys() {
+    dict="$1"
+    _echo_e "$dict" | while read entry; do
+        _echo "$entry" | sed 's/:.*$//'
+    done
+}
 # testing area
 if [ "$0" = "./dicts.sh" ]; then
     echo == testing _echo == 
