@@ -10,6 +10,7 @@
 # only first colon is taken into account
 
 # fixing echo (some shells enable -e flag by default
+
 echolines=$(echo "a\nb" | wc -l) 
 case "$echolines" in
     2 ) 
@@ -34,7 +35,7 @@ esac
 shellescape() {
     str="$1"
     # not extended `echo' here! 
-    esc_str=$(_echo "$str" | sed 's/\\/\\\\/')
+    esc_str=$(_echo "$str" | sed 's/\\/\\\\/g')
     _echo "$esc_str"
 }
 
@@ -43,8 +44,7 @@ shellescape() {
 dict_get() {
     dict="$1"
     key="$2"
-    mtchline=`_echo_e "$dict" | grep "^${key}:"`
-    val=`_echo "$mtchline" | sed 's/^[^:]://'`
+    val=`_echo_e "$dict" | sed -n "s/^${key}://p"`
     _echo_e "$val"
     return $?
 }
@@ -55,18 +55,26 @@ dict_put() {
     key="$2"
     value="$3"
     # check if key exists
-    _echo_e "$dict" | grep -q "^${key}:" && { echo Key exists; return 1; }
-    _echo "${dict}\n${key}:$(shellescape ${value})"
+    _echo_e "$dict" | grep -q "^${key}:" && { _echo "$dict"; return 1; }
+    # magic with newlines to handle empty dict
+    [ ! -z "$dict" ] && _echo -n "$dict\n"
+    # shellescape here protects strings from
+    #+ extended echo, when we are doing lookup 
+    _echo -n "${key}:$(shellescape "${value}" )"
     return $?
+}
+
+dict_print() {
+    _echo_e -n "$1"
 }
 
 # dict_keys <dict string>
 dict_keys() {
     dict="$1"
-    _echo_e "$dict" | while read entry; do
-        _echo "$entry" | sed 's/:.*$//'
-    done
+    _echo_e "$dict" | sed 's/:.*$//'
+    return $?
 }
+
 # testing area
 if [ "$0" = "./dicts.sh" ]; then
     echo == testing _echo == 
@@ -78,8 +86,10 @@ if [ "$0" = "./dicts.sh" ]; then
     echo == testing dict funcs ==
     dict="a:foo\nb:bar"
     dict_get "$dict" b
-    dict=`dict_put "$dict" c 'baaz\nkeek\\' `
+    dict=`dict_put "$dict" c 'baaz\nk\te ek\\' `
+    _echo "$dict"
     _echo_e "$dict"
     dict_get "$dict" c
+    dict_keys "$dict"
 fi
 
