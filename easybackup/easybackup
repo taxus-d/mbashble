@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+#------------------------------------------------
+# Epic magical backup script
+# backups files at your will 
+# still can't make coffe, we are not working on it
+#------------------------------------------------
+
+# [ ! -z "$1" ] && cd "$1" && shift
+CURDIR="`pwd`"
+[ -z $DEBUG ] && DEBUG=false
+
+# checks if file is a source code
+filter_file() {
+    str=$(file "$1")
+    desc=${str#*:}
+    [[ -f $1 && "$desc" =~ "text" ]]
+}
+
+. ~/Projects/Bash/kekshell/modules/args/args.fn.sh
+
+usage() {
+    echo "
+    easybackup -flag [files ..]
+    -h, --help  : display help
+    -f, --files : manual mode, backup specified files
+    -m, --make  : use makefile to guess what to backup, tricky one
+    -a, --auto  : guess what files to backup, even more tricky
+    "
+    exit 0
+}
+
+handle_flag() {
+    case "$1" in
+        -h|--help )
+            usage
+            ;;
+        -f|--files )
+            eval `make_slurpy`
+            shift 
+            srcfiles="$@"
+            mode=manual
+            eval `stop_parsing`
+            ;;
+        -m|--make )
+            makename=$(find -name "[Mm]akefile")
+            if [[ ! -z "$makename" ]];then
+                mode=make
+            else
+                echo "Makefile not found" >&2 && exit 1
+            fi
+            eval `stop_parsing`
+            ;;
+        -a|--auto )
+            mode=auto
+            eval `stop_parsing`
+            ;;
+        * )
+            eval `unknown_flag`
+            ;;
+    esac
+}
+
+export mode=
+ARGC=
+parse_args "$@"
+
+
+
+case "$mode" in
+    make )
+        srcfiles=`
+        cat "$makename" | grep "SOURCES"  | \
+        sed -nr 's/^[[:space:]]*SOURCES ?= ?//p' | \
+        tr '\n' ' ' `
+        srcfiles="$srcfiles $makename"
+        ;;
+    manual )
+        ;;
+    auto )
+        srcfiles=`
+        find . | while read line; do
+            filter_file "$line" && echo -n "\"$line\"" ''
+        done
+        `
+        ;;
+    * ) 
+        echo "Invalid mode" >&2 && exit 1
+        ;;
+esac
+
+[[ -z "$srcfiles" ]] && exit 1
+
+
+tarname="$(basename "$CURDIR")_$(date +"%Y%m%d_%H%M%S").tar.gz"
+if [[ ! -e  backups ]]; then
+    mkdir backups
+fi
+
+$DEBUG && echo "$tarname" "$srcfiles"
+
+# yeah. Really EVAL. No hope here, it's bash, man
+eval tar -czf "backups/$tarname" "$srcfiles"
+exit $?

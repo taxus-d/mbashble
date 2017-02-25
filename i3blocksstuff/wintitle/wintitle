@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+ELL='…'
+MAXLEN=40
+RATIO=2:1
+
+strlen() { # $str
+    echo -n "${#1}"
+}
+substr() { # str beg end
+    echo -n "${1:$2:$3}"
+}
+
+[ ! -z "$1" ] && MAXLEN="$1"
+[ ! -z "$2" ] && RATIO="$2"
+
+RATIO1=$(echo -n "$RATIO" | awk -F : '{print $1}')
+RATIO2=$(echo -n "$RATIO" | awk -F : '{print $2}')
+title=`xdotool getactivewindow getwindowname | iconv -f utf8 -t utf8`
+tlen=`strlen "$title"`
+
+if [[ $tlen -gt $(($MAXLEN)) ]];then
+    mid=$(( $MAXLEN * $RATIO1 / ($RATIO1 + $RATIO2) ))
+    [[ $mid -lt 2 ]] && mid=2
+    beg=$(substr "$title" 0 $(( $mid - 2)) )
+    end=$(substr "$title" $(($tlen - $MAXLEN + $mid + 1)) $tlen)
+    wtitle="${beg} ${ELL} $end"
+else
+    wtitle="$title"
+fi
+echo "$wtitle"
+# vim:sw=4
