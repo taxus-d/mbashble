@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ -z $* ]; then
+    export PS1="\[$(tput setaf 2)\]cmd\# \u@\[$(tput smul)\]kek\[$(tput rmul)\]machine: \W> "
+    export PS2="\[$(tput setaf 3)\]kek>>"
+    export PS3="what kind of kek do your prefer?:"
+    export PS4="kek+"
+    sh -i
+    tput sgr0
+else
+    echo "$@.Kek!"
+fi

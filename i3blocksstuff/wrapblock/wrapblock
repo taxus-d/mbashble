@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+POWRAF='\ue0b0'
+POWRAE='\ue0b1'
+POWLAF='\ue0b2'
+POWLAE='\ue0b3'
+PANGO_BEG='<span'
+PANGO_END='</span>'
+pango_text="$PANGO_BEG "
+
+background="#000000"
+foreground="#ffffff"
+
+err() {
+    echo "$*" >&2
+}
+
+handle_arrow () {
+    arr="$1"
+    case "$arr" in
+        '<<' )
+            echo "<span font='Hack'><span foreground='$background' background='$foreground'>$POWLAF</span><span foreground='$foreground' background='$background'>$POWLAF</span></span>"
+            ;;
+        '<' )
+            echo "<span font='Hack'><span foreground='$background' background='$foreground'>$POWLAE</span></span>"
+            ;;
+        '>>' )
+            echo "<span font='Hack'><span foreground='$background background='$foreground'>$POWRAF</span><span foreground='$foreground' background='$background'>$POWRAF</span></span>"
+            ;;
+        '>' )
+            echo "<span font='Hack'><span foreground='$background' background='$foreground'>$POWRAE</span></span>"
+            ;;
+    esac
+}
+
+handle_shape() {
+    read beg end <<EOF
+$@
+EOF
+    echo `handle_arrow "$beg"``handle_arrow "$end"`
+}
+
+
+while getopts :s:f:t:b: opt; do
+  case "$opt" in
+      s )
+          shape="$OPTARG"
+          ;;
+      f )
+          pango_text="$pango_text font='$OPTARG'"
+          ;;
+      t )
+          foreground="$OPTARG"
+          ;;
+      b )
+          background="$OPTARG"
+          ;;
+      \? )
+          err "Invalid option: -$opt"
+          exit 1
+          ;;
+      : )
+          err "Option $opt requires an argument"
+          exit 1
+          ;;
+  esac
+done
+
+handle_shape "$shape" #| read forarr backarr
+exit 0
+pango_text="$pango_text foreground='$foreground'"
+pango_text="$pango_text background='$background'"
+pango_text="$pango_text>"
+
+read block_text
+
+block_form_text="${pango_text}${blocktext}${PANGO_END}"
+block_form_text="${forarr}${block_form_text}${backarr}"
+
+echo -n "$block_form_text"
+
+
