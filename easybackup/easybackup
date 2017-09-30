@@ -17,7 +17,7 @@ filter_file() {
     [[ -f $1 && "$desc" =~ "text" ]]
 }
 
-. ~/Projects/Bash/kekshell/modules/args/args.fn.sh
+. ~/projects/Bash/kekshell/modules/args/args.fn.sh
 
 usage() {
     echo "

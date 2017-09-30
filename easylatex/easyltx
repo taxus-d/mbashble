@@ -1,14 +1,16 @@
 #!/bin/bash
 preamb='
 \relax
-\documentclass[preview]{standalone}
+\documentclass[preview,fleqn]{standalone}
 \usepackage[utf8]{inputenc}
 \usepackage[T2A]{fontenc}
 \usepackage[english,russian]{babel}
-\usepackage{amsmath,amssymb,amsfonts}
 \usepackage{xcolor}
 \usepackage{nicefrac}
-\newcommand\lfrac\nicefrac
+\let\lfrac\nicefrac
+'
+mathpkg='
+\usepackage{amsmath,amssymb,amsfonts}
 '
 begin='
 \begin{document}
@@ -16,12 +18,12 @@ begin='
 inversebeg=
 
 begmath='
-$\displaystyle
+\[\hspace{-3em}
 '
 formula=
 
 endmath='
-$
+\]
 '
 inverseend=
 
@@ -42,41 +44,31 @@ disp_help() {
         --help,    -d --- display help
         --preview, -p --- preview generated image
         --inverse, -i --- inverse image colors
+        --tmath  , -t --- for taxus: use tmath.sty
+        --hook   , -k --- insert stuff in preamble
     "
 }
 handle_flag() {
     flag="$1"
     for flag in "$@"; do
         case "$flag" in
-        --help)
+        --help|h)
             disp_help && exit 0
             ;;
-        -h)
-            disp_help && exit 0
-            ;;
-        -d)
+        --debug|-d)
             debug=1
             ;;
-        --debug)
-            debug=1
-            ;;
-        -p)
+        --preview|-p)
             preview=1
             ;;
-        --preview)
-            preview=1
-            ;;
-        -i)
+        --inverse|-i)
             inverse=1
             ;;
-        --inverse)
-            inverse=1
-            ;;
-        -n)
+        --no-math|-n)
             nomath=1
             ;;
-        --no-math)
-            nomath=1
+        --tmath|-t)
+            tmath=1
             ;;
         *)
             ;;
@@ -112,12 +104,22 @@ name=easytexput   #`date +"%Y%m%d_%H%M%S"`
 
 [[ $nomath == 1 ]] && begmath='' && endmath=''
 
+if [[ $tmath  == 1 ]]; then 
+    preamb="${preamb}
+    \\usepackage{tmath}
+    \\usepackage[draft]{cussymb}
+    " && export TEXINPUTS="~/texfm/tex//:.::"
+else
+    preamb="${preamb}${mathpkg}"
+fi
+
 math="${begmath}${formula}${endmath}"
 ltxcode="${preamb}${begin}${inversebeg}${math}${inverseend}${end}"
 
 [[ $debug == 1  ]] && echo "$ltxcode"
 
-echo "$ltxcode"  | (eval latex -jobname=$name $output) && \
+# latex sometimes return 1 in almost valid cases
+echo "$ltxcode"  | (eval latex -jobname=$name $output) ; \
     (eval dvipng -T bbox -D 200 $name.dvi $output) && \
     echo see "$workdir/${name}1.png" for output && [[ $preview == 1 ]] && \
     (eval xdg-open "$workdir/${name}1.png" $output &)
