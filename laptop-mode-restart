@@ -1,0 +1,4 @@
+#!/bin/sh
+echo 0 > /proc/sys/vm/laptop_mode
+echo 5 > /proc/sys/vm/laptop_mode
+
