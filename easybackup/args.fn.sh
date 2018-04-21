@@ -124,7 +124,7 @@ parse_args() {
             ;;
     esac
     plain=`__append_spc_string "$plain" "$*"`
-    if [[ -z ${ARGC+x} ]]; then
+    if [[ ! -z ${ARGC} ]]; then
         echo -n "$plain"
     else
         ARGC="$plain"
