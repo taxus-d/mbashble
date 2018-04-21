@@ -106,9 +106,9 @@ name=easytexput   #`date +"%Y%m%d_%H%M%S"`
 
 if [[ $tmath  == 1 ]]; then 
     preamb="${preamb}
-    \\usepackage{tmath}
-    \\usepackage[draft]{cussymb}
-    " && export TEXINPUTS="~/texfm/tex//:.::"
+    \\usepackage{trmath}
+    \\usepackage{trsym}
+    " && export TEXINPUTS="~/opt/texfm/tex//:.::"
 else
     preamb="${preamb}${mathpkg}"
 fi
@@ -118,13 +118,20 @@ ltxcode="${preamb}${begin}${inversebeg}${math}${inverseend}${end}"
 
 [[ $debug == 1  ]] && echo "$ltxcode"
 
+retstat=0
 # latex sometimes return 1 in almost valid cases
-echo "$ltxcode"  | (eval latex -jobname=$name $output) ; \
-    (eval dvipng -T bbox -D 200 $name.dvi $output) && \
-    echo see "$workdir/${name}1.png" for output && [[ $preview == 1 ]] && \
-    (eval xdg-open "$workdir/${name}1.png" $output &)
+echo "$ltxcode"  | (eval latex -jobname=$name $output)
+retstat=$?
+
+(eval dvipng -T bbox -D 200 $name.dvi $output) && \
+echo see "$workdir/${name}1.png" for output
+retstat=$(($retstat + $?))
+[[ $preview == 1 && $preview > 0 ]] && \
+(eval xdg-open "$workdir/${name}1.png" $output &)
+
 #mv texput1.png "$curdir"
 cd "$curdir"
+exit $retstat
 
 
 
