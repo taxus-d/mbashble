@@ -58,9 +58,9 @@ parse_args() {
 # 1: waits flag argument
 # 2: slurpy mode
 # 3: immediate stop
-    state=0
-    plain=
-    arg=
+    local state=0
+    local plain=
+    local arg=
 
 # some useful stuff, a kind of abstraction layer over bash
     __err_exp_arg() {
